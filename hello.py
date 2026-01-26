@@ -1,30 +1,33 @@
 # USDT Jetton Balance Function
 def get_usdt_balance(address):
-    """Fetches USDT (Jetton) balance for a given TON address"""
+    """Fetches USDT balance for a given TON address via TonCenter API"""
     try:
-        # USDT Master Address on TON
+        # 1. The Official USDT Master Contract Address
         USDT_MASTER = "EQCxE6mUtQJKFnGfaROTKOt1lZbDiiX1kCixRv7Nw2Id_sDs"
-        # We call the 'get_wallet_address' method on the USDT Master
-        url = f"https://toncenter.com/api/v2/runGetMethod"
+        # 2. Ask the Master for the user's specific Jetton Wallet
+        url = "https://toncenter.com/api/v2/runGetMethod"
         payload = {
             "address": USDT_MASTER,
             "method": "get_wallet_address",
             "stack": [["tvm.Slice", address]]
         }
         headers = {"X-API-Key": TONCENTER_KEY}
-        # 1. Get the specific Jetton Wallet address for this user
-        resp = requests.post(url, json=payload, headers=headers).json()
-        if not resp.get("ok"): return 0.0
-        # The address comes back as a 'cell' in the stack
-        jetton_wallet_hex = resp["result"]["stack"][0][1]["bytes"]
-        # We won't bore you with HEX conversion; let's use the easier V3 endpoint if available
-        # OR: Use a simpler v2/getTokenData if your API key supports it.
-        # SIMPLIFIED VERSION for your current setup:
-        # We'll use the 'getTokenData' shortcut
-        url_v2 = f"https://toncenter.com/api/v2/getTokenData?address={address}"
-        # Note: Not all providers support this directly; checking balance of the user's jetton wallet is better.
-        return "Checking..." # Let's refine the UI below first
-    except:
+        response = requests.post(url, json=payload, headers=headers).json()
+        if response.get("ok") and response["result"]["exit_code"] == 0:
+            # The result is a HEX address of the user's USDT wallet
+            # We then ask the API for the account state of THAT wallet
+            user_jetton_wallet = response["result"]["stack"][0][1]["bytes"]
+            # 3. Get the balance of the USDT wallet
+            # We use a shortcut: getAddressBalance works for Jetton wallets too!
+            balance_url = f"https://toncenter.com/api/v2/getAddressBalance?address={user_jetton_wallet}"
+            balance_resp = requests.get(balance_url, headers=headers).json()
+            if balance_resp.get("ok"):
+                # USDT has 6 decimals (unlike TON's 9)
+                raw_balance = int(balance_resp["result"])
+                return round(raw_balance / 10**6, 2)
+        return 0.0
+    except Exception as e:
+        print(f"USDT Error: {e}")
         return 0.0
 import os
 import logging
@@ -131,14 +134,13 @@ def handle_all_messages(message):
     if len(text) > 40 and (text.startswith("EQ") or text.startswith("UQ")):
         bot.send_chat_action(message.chat.id, 'typing')
         ton_balance = get_ton_balance(text)
+        usdt_balance = get_usdt_balance(text)
         ton_price = get_ton_price()
-        # Format the message
         report = f"🔍 **Quincy Wallet Report**\n`{text[:6]}...{text[-6:]}`\n\n"
         if ton_balance is not None:
-            usd_val = round(ton_balance * ton_price, 2) if ton_price else 0
-            report += f"💎 **TON:** `{ton_balance} TON` (${usd_val})\n"
-        # Placeholder for USDT (We will finish the complex HEX logic tomorrow)
-        report += f"💵 **USDT:** `Coming Soon 🛠️` \n\n"
+            ton_usd = round(ton_balance * ton_price, 2) if ton_price else 0
+            report += f"💎 **TON:** `{ton_balance} TON` (${ton_usd})\n"
+        report += f"💵 **USDT:** `{usdt_balance} USDT`\n\n"
         report += f"📈 *TON Price: ${ton_price}*"
         bot.reply_to(message, report, parse_mode='Markdown')
     else:
