@@ -1,3 +1,31 @@
+# USDT Jetton Balance Function
+def get_usdt_balance(address):
+    """Fetches USDT (Jetton) balance for a given TON address"""
+    try:
+        # USDT Master Address on TON
+        USDT_MASTER = "EQCxE6mUtQJKFnGfaROTKOt1lZbDiiX1kCixRv7Nw2Id_sDs"
+        # We call the 'get_wallet_address' method on the USDT Master
+        url = f"https://toncenter.com/api/v2/runGetMethod"
+        payload = {
+            "address": USDT_MASTER,
+            "method": "get_wallet_address",
+            "stack": [["tvm.Slice", address]]
+        }
+        headers = {"X-API-Key": TONCENTER_KEY}
+        # 1. Get the specific Jetton Wallet address for this user
+        resp = requests.post(url, json=payload, headers=headers).json()
+        if not resp.get("ok"): return 0.0
+        # The address comes back as a 'cell' in the stack
+        jetton_wallet_hex = resp["result"]["stack"][0][1]["bytes"]
+        # We won't bore you with HEX conversion; let's use the easier V3 endpoint if available
+        # OR: Use a simpler v2/getTokenData if your API key supports it.
+        # SIMPLIFIED VERSION for your current setup:
+        # We'll use the 'getTokenData' shortcut
+        url_v2 = f"https://toncenter.com/api/v2/getTokenData?address={address}"
+        # Note: Not all providers support this directly; checking balance of the user's jetton wallet is better.
+        return "Checking..." # Let's refine the UI below first
+    except:
+        return 0.0
 import os
 import logging
 import json
@@ -101,13 +129,18 @@ def handle_all_messages(message):
     
     # Check for Wallet Address
     if len(text) > 40 and (text.startswith("EQ") or text.startswith("UQ")):
-        balance = get_ton_balance(text)
-        price = get_ton_price()
-        if balance is not None:
-            usd_val = f" (${round(balance * price, 2)})" if price else ""
-            bot.reply_to(message, f"💎 **Balance:** `{balance} TON`{usd_val}")
-        else:
-            bot.reply_to(message, "❌ Invalid address.")
+        bot.send_chat_action(message.chat.id, 'typing')
+        ton_balance = get_ton_balance(text)
+        ton_price = get_ton_price()
+        # Format the message
+        report = f"🔍 **Quincy Wallet Report**\n`{text[:6]}...{text[-6:]}`\n\n"
+        if ton_balance is not None:
+            usd_val = round(ton_balance * ton_price, 2) if ton_price else 0
+            report += f"💎 **TON:** `{ton_balance} TON` (${usd_val})\n"
+        # Placeholder for USDT (We will finish the complex HEX logic tomorrow)
+        report += f"💵 **USDT:** `Coming Soon 🛠️` \n\n"
+        report += f"📈 *TON Price: ${ton_price}*"
+        bot.reply_to(message, report, parse_mode='Markdown')
     else:
         # Normal AI Chat
         bot.send_chat_action(message.chat.id, 'typing')
