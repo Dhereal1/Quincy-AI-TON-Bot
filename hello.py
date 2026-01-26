@@ -1,10 +1,10 @@
 # USDT Jetton Balance Function
 def get_usdt_balance(address):
-    """Fetches USDT balance for a given TON address via TonCenter API"""
+    """Fetches real-time USDT balance by querying the user's Jetton Wallet"""
     try:
         # 1. The Official USDT Master Contract Address
         USDT_MASTER = "EQCxE6mUtQJKFnGfaROTKOt1lZbDiiX1kCixRv7Nw2Id_sDs"
-        # 2. Ask the Master for the user's specific Jetton Wallet
+        # 2. Ask the Master for the user's specific Jetton Wallet address
         url = "https://toncenter.com/api/v2/runGetMethod"
         payload = {
             "address": USDT_MASTER,
@@ -14,20 +14,20 @@ def get_usdt_balance(address):
         headers = {"X-API-Key": TONCENTER_KEY}
         response = requests.post(url, json=payload, headers=headers).json()
         if response.get("ok") and response["result"]["exit_code"] == 0:
-            # The result is a HEX address of the user's USDT wallet
-            # We then ask the API for the account state of THAT wallet
+            # The result contains the address of the user's personal USDT contract
+            # We extract the address from the 'slice' return type
             user_jetton_wallet = response["result"]["stack"][0][1]["bytes"]
-            # 3. Get the balance of the USDT wallet
-            # We use a shortcut: getAddressBalance works for Jetton wallets too!
+            # 3. Check the balance of that specific contract
+            # We use the standard getAddressBalance on the Jetton Wallet
             balance_url = f"https://toncenter.com/api/v2/getAddressBalance?address={user_jetton_wallet}"
             balance_resp = requests.get(balance_url, headers=headers).json()
             if balance_resp.get("ok"):
-                # USDT has 6 decimals (unlike TON's 9)
+                # USDT uses 6 decimals (Tether standard)
                 raw_balance = int(balance_resp["result"])
                 return round(raw_balance / 10**6, 2)
         return 0.0
     except Exception as e:
-        print(f"USDT Error: {e}")
+        print(f"USDT Detection Error: {e}")
         return 0.0
 import os
 import logging
