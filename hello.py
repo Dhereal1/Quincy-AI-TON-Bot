@@ -7,6 +7,17 @@ from groq import Groq
 
 import requests
 
+def get_ton_price():
+    """Fetches the live price of Toncoin in USD from CoinGecko"""
+    try:
+        url = "https://api.coingecko.com/api/v3/simple/price?ids=toncoin&vs_currencies=usd"
+        response = requests.get(url)
+        data = response.json()
+        return data['toncoin']['usd']
+    except Exception as e:
+        print(f"Price Error: {e}")
+        return None
+
 # 1. Setup Logging (This shows you errors in VS Code terminal)
 logging.basicConfig(level=logging.INFO)
 load_dotenv()
@@ -109,8 +120,18 @@ def handle_all_messages(message):
     if len(text) > 40 and (text.startswith("EQ") or text.startswith("UQ")):
         bot.send_chat_action(message.chat.id, 'find_location') # 'Looking up...'
         balance = get_ton_balance(text)
-        if balance is not None:
-            bot.reply_to(message, f"💎 **Wallet Found!**\n\nBalance: `{balance} TON`\n\nWould you like me to analyze this wallet further?")
+        price = get_ton_price()
+        if balance is not None and price is not None:
+            usd_value = round(balance * price, 2)
+            bot.reply_to(
+                message,
+                f"💎 **Wallet Analysis**\n\n"
+                f"💰 Balance: `{balance} TON`\n"
+                f"💵 Value: `${usd_value} USD` (@ ${price}/TON)\n\n"
+                f"📈 *Live market data provided by CoinGecko*"
+            )
+        elif balance is not None:
+            bot.reply_to(message, f"💎 **Wallet Found!**\n\nBalance: `{balance} TON`\n\n(USD price unavailable right now.)")
         else:
             bot.reply_to(message, "❌ I couldn't find that wallet. Make sure the address is correct!")
     # 2. Otherwise, treat it as a normal AI conversation
