@@ -1,0 +1,6 @@
+TON (The Open Network) is a high-performance blockchain.
+- Native Token: Toncoin ($TON)
+- Key Feature: Infinite sharding (speed).
+- Wallets: Tonkeeper (non-custodial) and @Wallet (custodial).
+- Addresses: Look like 'EQB...' and are about 48 characters long.
+- Jettons: These are custom tokens on TON (like USDT or Notcoin).
