@@ -15,7 +15,7 @@ load_dotenv()
 
 TOKEN = os.getenv('TELEGRAM_TOKEN')
 GROQ_KEY = os.getenv('GROQ_KEY')
-TONCENTER_KEY = os.getenv('TONCENTER_API_KEY')
+TONCENTER_KEY = os.getenv('TONCENTER_API_KEY')  # Get free key from https://toncenter.com
 
 bot = telebot.TeleBot(TOKEN)
 client = Groq(api_key=GROQ_KEY)
@@ -25,6 +25,9 @@ alert_price = None
 alert_chat_id = None
 last_price = 0.0
 last_update_time = 0
+
+# USDT Jetton Master Contract on TON
+USDT_MASTER_ADDRESS = "EQCxE6mUtQJKFnGfaROTKOt1lZbDiiX1kCixRv7Nw2Id_sDs"
 
 # --- 2. UTILS ---
 def get_ton_price():
@@ -44,6 +47,155 @@ def get_ton_price():
         logging.error(f"Error fetching TON price: {e}")
     return last_price if last_price else 0.0
 
+def get_ton_balance(address):
+    """
+    Fetch TON balance using TON Center API
+    Returns balance in TON (float) or None on error
+    """
+    try:
+        # Using TON Center API v2
+        url = f"https://toncenter.com/api/v2/getAddressBalance"
+        params = {"address": address}
+        
+        headers = {}
+        if TONCENTER_KEY:
+            headers["X-API-Key"] = TONCENTER_KEY
+        
+        response = requests.get(url, params=params, headers=headers, timeout=10)
+        response.raise_for_status()
+        
+        data = response.json()
+        
+        if data.get("ok") and "result" in data:
+            # Balance is returned in nanotons (1 TON = 1,000,000,000 nanotons)
+            balance_nanoton = int(data["result"])
+            balance_ton = balance_nanoton / 1_000_000_000
+            return round(balance_ton, 4)
+        else:
+            logging.error(f"API returned not ok: {data}")
+            return None
+            
+    except requests.exceptions.RequestException as e:
+        logging.error(f"Request error fetching TON balance: {e}")
+        return None
+    except Exception as e:
+        logging.error(f"Error fetching TON balance: {e}")
+        return None
+
+def get_usdt_balance(address):
+    """
+    Fetch USDT balance using TON Center API v3
+    USDT is a Jetton (token) on TON blockchain
+    Returns balance in USDT (float) or 0.0 on error
+    """
+    try:
+        # Using TON Center API v3 to get jetton wallets
+        url = "https://toncenter.com/api/v3/jetton/wallets"
+        params = {
+            "owner_address": address,
+            "jetton_address": USDT_MASTER_ADDRESS,
+            "limit": 1
+        }
+        
+        headers = {}
+        if TONCENTER_KEY:
+            headers["X-API-Key"] = TONCENTER_KEY
+        
+        response = requests.get(url, params=params, headers=headers, timeout=10)
+        response.raise_for_status()
+        
+        data = response.json()
+        
+        # Check if we have jetton wallets
+        if "jetton_wallets" in data and len(data["jetton_wallets"]) > 0:
+            jetton_wallet = data["jetton_wallets"][0]
+            balance = jetton_wallet.get("balance", "0")
+            
+            # USDT has 6 decimals (1 USDT = 1,000,000 units)
+            balance_usdt = int(balance) / 1_000_000
+            return round(balance_usdt, 2)
+        else:
+            # No USDT wallet found for this address
+            return 0.0
+            
+    except requests.exceptions.RequestException as e:
+        logging.error(f"Request error fetching USDT balance: {e}")
+        return 0.0
+    except Exception as e:
+        logging.error(f"Error fetching USDT balance: {e}")
+        return 0.0
+
+def get_last_transactions(address, limit=5):
+    """
+    Fetch last N transactions for an address
+    Returns formatted string or error message
+    """
+    try:
+        url = f"https://toncenter.com/api/v2/getTransactions"
+        params = {
+            "address": address,
+            "limit": limit
+        }
+        
+        headers = {}
+        if TONCENTER_KEY:
+            headers["X-API-Key"] = TONCENTER_KEY
+        
+        response = requests.get(url, params=params, headers=headers, timeout=10)
+        response.raise_for_status()
+        
+        data = response.json()
+        
+        if not data.get("ok") or not data.get("result"):
+            return "No recent transactions found."
+        
+        transactions = data["result"]
+        
+        if not transactions:
+            return "No recent transactions found."
+        
+        # Format transactions
+        tx_list = []
+        for i, tx in enumerate(transactions[:limit], 1):
+            try:
+                # Extract transaction details
+                tx_hash = tx.get("transaction_id", {}).get("hash", "N/A")[:8]
+                
+                # Get in/out messages
+                in_msg = tx.get("in_msg", {})
+                value = in_msg.get("value", "0")
+                
+                # Convert from nanotons to TON
+                value_ton = int(value) / 1_000_000_000 if value != "0" else 0
+                
+                # Get timestamp
+                utime = tx.get("utime", 0)
+                time_str = time.strftime('%Y-%m-%d %H:%M', time.localtime(utime)) if utime else "Unknown"
+                
+                # Determine if incoming or outgoing
+                source = in_msg.get("source", "")
+                destination = in_msg.get("destination", "")
+                
+                direction = "📥 IN" if destination == address else "📤 OUT"
+                
+                if value_ton > 0:
+                    tx_list.append(f"{i}. {direction} `{value_ton:.4f} TON` - {time_str}")
+                else:
+                    tx_list.append(f"{i}. {direction} Smart Contract Call - {time_str}")
+                
+            except Exception as e:
+                logging.error(f"Error parsing transaction: {e}")
+                continue
+        
+        return "\n".join(tx_list) if tx_list else "No recent transactions found."
+        
+    except requests.exceptions.RequestException as e:
+        logging.error(f"Request error fetching transactions: {e}")
+        return "❌ Error fetching transactions."
+    except Exception as e:
+        logging.error(f"Error fetching transactions: {e}")
+        return "❌ Error fetching transactions."
+
 # --- 3. BACKGROUND WATCHER ---
 def price_watcher():
     """Background thread to monitor price alerts"""
@@ -62,7 +214,7 @@ def price_watcher():
 
 threading.Thread(target=price_watcher, daemon=True).start()
 
-# --- 4. COMMAND HANDLERS (THESE MUST BE REGISTERED FIRST!) ---
+# --- 4. COMMAND HANDLERS ---
 
 @bot.message_handler(commands=['start', 'dashboard'])
 def show_dashboard(message):
@@ -127,6 +279,10 @@ def show_help(message):
         "`/alert [price]` - Set price alert\n"
         "`/help` - Show this menu\n"
         "━━━━━━━━━━━━━━━\n"
+        "💬 **Check Wallet:**\n"
+        "Just paste any TON address!\n"
+        "Example: `EQD...abc`\n"
+        "━━━━━━━━━━━━━━━\n"
         "💬 You can also chat with me naturally!"
     )
     bot.send_message(message.chat.id, help_text, parse_mode='Markdown')
@@ -151,13 +307,13 @@ def callback_query(call):
     
     elif call.data == "check_wallet":
         bot.answer_callback_query(call.id)
-        bot.send_message(call.message.chat.id, "📍 **Paste your TON wallet address:**\n(Example: `EQD...abc`)", parse_mode='Markdown')
+        bot.send_message(call.message.chat.id, "📍 **Paste your TON wallet address:**\n\nExample:\n`EQCxE6mUtQJKFnGfaROTKOt1lZbDiiX1kCixRv7Nw2Id_sDs`", parse_mode='Markdown')
     
     elif call.data == "set_alert_info":
         bot.answer_callback_query(call.id)
         bot.send_message(call.message.chat.id, "🔔 **Set Price Alert**\n\nUse the command:\n`/alert [target_price]`\n\nExample: `/alert 3.50`", parse_mode='Markdown')
 
-# --- 6. GENERAL HANDLER (AI CHAT) - MUST BE LAST! ---
+# --- 6. GENERAL HANDLER (AI CHAT + WALLET DETECTION) - MUST BE LAST! ---
 @bot.message_handler(func=lambda message: True)
 def handle_all(message):
     """
@@ -167,14 +323,13 @@ def handle_all(message):
     
     # AGGRESSIVE WALLET DETECTION
     # TON addresses are typically 48 characters and start with specific prefixes
-    # We check multiple conditions to catch all valid TON addresses
     is_ton_address = (
-        len(text) >= 44 and len(text) <= 50 and  # Length check with range
+        len(text) >= 44 and len(text) <= 52 and  # Length check with range
         (text.startswith("EQ") or 
          text.startswith("UQ") or 
          text.startswith("0Q") or
          text.startswith("kQ")) and
-        text.replace("-", "").replace("_", "").isalnum()  # Only alphanumeric (allow - and _ separators)
+        text.replace("-", "").replace("_", "").isalnum()  # Only alphanumeric
     )
     
     if is_ton_address:
@@ -189,21 +344,37 @@ def handle_all(message):
             hist = get_last_transactions(text)
             
             # Handle None/error cases gracefully
+            if t_bal is None:
+                bot.reply_to(message, 
+                    f"❌ **Error fetching wallet data**\n\n"
+                    f"Could not retrieve balance for:\n`{text}`\n\n"
+                    f"Please check:\n"
+                    f"• Address is correct\n"
+                    f"• Address is active on TON blockchain\n"
+                    f"• Try again in a moment",
+                    parse_mode='Markdown'
+                )
+                return
+            
             ton_balance = t_bal if t_bal is not None else 0
             usdt_balance = u_bal if u_bal is not None else 0
             ton_value_usd = round(ton_balance * p, 2) if p and ton_balance else 0
             
+            # Calculate total portfolio value
+            total_value_usd = ton_value_usd + usdt_balance
+            
             # Format transaction history
-            if hist and hist != "No recent transactions found.":
+            if hist and hist != "No recent transactions found." and not hist.startswith("❌"):
                 transaction_text = hist
             else:
                 transaction_text = "No recent transactions found."
             
-            # Build the wallet report
+            # Build the wallet report with improved formatting
             report = (
                 f"🔍 **Quincy Wallet Report**\n"
                 f"━━━━━━━━━━━━━━━\n"
                 f"📍 **Address:**\n`{text}`\n\n"
+                f"💰 **Portfolio Value:** `${total_value_usd:.2f} USD`\n\n"
                 f"💎 **TON Balance:** `{ton_balance} TON` (${ton_value_usd})\n"
                 f"💵 **USDT Balance:** `{usdt_balance} USDT`\n\n"
                 f"📜 **Last 5 Transactions:**\n{transaction_text}\n\n"
@@ -258,24 +429,23 @@ def handle_all(message):
                 "Please try again or use /help for available commands."
             )
 
-# --- Stubs for missing functions (if not defined elsewhere) ---
-def get_ton_balance(address):
-    """Stub for TON balance lookup. Replace with real implementation."""
-    return None
-
-def get_usdt_balance(address):
-    """Stub for USDT Jetton balance lookup. Replace with real implementation."""
-    return None
-
-def get_last_transactions(address):
-    """Stub for last transactions lookup. Replace with real implementation."""
-    return "No recent transactions found."
-
 # --- 7. STARTUP ---
 if __name__ == "__main__":
     print("🚀 Quincy is online...")
+    print("━━━━━━━━━━━━━━━━━━━━━━━━")
     print("📊 Dashboard: /start or /dashboard")
     print("💰 Price: /price")
     print("🔔 Alerts: /alert [price]")
+    print("💎 Wallet Check: Just paste a TON address")
+    print("━━━━━━━━━━━━━━━━━━━━━━━━")
+    
+    if not TONCENTER_KEY:
+        print("⚠️  WARNING: TONCENTER_API_KEY not set!")
+        print("   Get a free API key from: https://toncenter.com")
+        print("   Add it to your .env file as: TONCENTER_API_KEY=your_key_here")
+        print("   The bot will work but with rate limits.")
+    else:
+        print("✅ TON Center API key loaded")
+    
     print("━━━━━━━━━━━━━━━━━━━━━━━━")
     bot.infinity_polling()
