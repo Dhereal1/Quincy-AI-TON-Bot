@@ -52,4 +52,4 @@ That’s it.
 ## 6️⃣ Support / Contact
 Built by Opeyemi  
 [GitHub](https://github.com/Dhereal1/Quincy-AI-TON-Bot)  
-Telegram: @yourhandle (replace with your actual handle if you want)
+Telegram: @Dhereal1
