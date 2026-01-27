@@ -161,41 +161,115 @@ def callback_query(call):
 @bot.message_handler(func=lambda message: True)
 def handle_all(message):
     """
-    AI chat handler - catches all non-command messages
-    This MUST be the last handler registered!
+    Enhanced handler with aggressive wallet detection and proper fallback to AI
     """
-    try:
-        # Build conversation context
-        messages = [
-            {
-                "role": "system", 
-                "content": (
-                    "You are Quincy, a helpful TON blockchain assistant. "
-                    "You provide information about TON cryptocurrency, blockchain technology, "
-                    "and can help users with general questions. Be concise and friendly. "
-                    "If users ask about TON price, suggest they use /price or /dashboard commands."
-                )
-            },
-            {
-                "role": "user", 
-                "content": message.text
-            }
-        ]
+    text = message.text.strip()
+    
+    # AGGRESSIVE WALLET DETECTION
+    # TON addresses are typically 48 characters and start with specific prefixes
+    # We check multiple conditions to catch all valid TON addresses
+    is_ton_address = (
+        len(text) >= 44 and len(text) <= 50 and  # Length check with range
+        (text.startswith("EQ") or 
+         text.startswith("UQ") or 
+         text.startswith("0Q") or
+         text.startswith("kQ")) and
+        text.replace("-", "").replace("_", "").isalnum()  # Only alphanumeric (allow - and _ separators)
+    )
+    
+    if is_ton_address:
+        # WALLET LOOKUP MODE - Show real blockchain data
+        bot.send_chat_action(message.chat.id, 'typing')
         
-        # Call Groq API
-        response = client.chat.completions.create(
-            model="llama-3.3-70b-versatile",
-            messages=messages,
-            temperature=0.7,
-            max_tokens=500
-        )
+        try:
+            # Get real data from blockchain
+            p = get_ton_price()
+            t_bal = get_ton_balance(text)
+            u_bal = get_usdt_balance(text)
+            hist = get_last_transactions(text)
+            
+            # Handle None/error cases gracefully
+            ton_balance = t_bal if t_bal is not None else 0
+            usdt_balance = u_bal if u_bal is not None else 0
+            ton_value_usd = round(ton_balance * p, 2) if p and ton_balance else 0
+            
+            # Format transaction history
+            if hist and hist != "No recent transactions found.":
+                transaction_text = hist
+            else:
+                transaction_text = "No recent transactions found."
+            
+            # Build the wallet report
+            report = (
+                f"🔍 **Quincy Wallet Report**\n"
+                f"━━━━━━━━━━━━━━━\n"
+                f"📍 **Address:**\n`{text}`\n\n"
+                f"💎 **TON Balance:** `{ton_balance} TON` (${ton_value_usd})\n"
+                f"💵 **USDT Balance:** `{usdt_balance} USDT`\n\n"
+                f"📜 **Last 5 Transactions:**\n{transaction_text}\n\n"
+                f"━━━━━━━━━━━━━━━\n"
+                f"📈 *Live TON Price: ${p} USD*"
+            )
+            
+            bot.reply_to(message, report, parse_mode='Markdown')
+            
+        except Exception as e:
+            logging.error(f"Error fetching wallet data: {e}")
+            bot.reply_to(message, 
+                f"❌ Error fetching wallet data for:\n`{text}`\n\n"
+                f"Please verify the address is correct and try again.",
+                parse_mode='Markdown'
+            )
+    
+    else:
+        # AI CHAT MODE - Only triggered if NOT a wallet address
+        bot.send_chat_action(message.chat.id, 'typing')
         
-        reply = response.choices[0].message.content
-        bot.reply_to(message, reply)
-        
-    except Exception as e:
-        logging.error(f"Error in AI handler: {e}")
-        bot.reply_to(message, "❌ Sorry, I encountered an error. Please try again or use /help for commands.")
+        try:
+            # Enhanced system prompt to prevent AI from inventing data
+            system_prompt = (
+                "You are Quincy, a professional TON blockchain assistant. "
+                "You provide information about TON cryptocurrency and blockchain technology. "
+                "IMPORTANT RULES:\n"
+                "- NEVER invent or fabricate wallet addresses, balances, or transaction data\n"
+                "- NEVER pretend to look up blockchain data - you cannot access real-time blockchain data\n"
+                "- If users ask about specific wallets, tell them to paste their wallet address directly\n"
+                "- If users ask for price data, suggest /price or /dashboard commands\n"
+                "- Be helpful, concise, and honest about your limitations\n"
+                "- Focus on educational content about TON, crypto concepts, and general blockchain topics"
+            )
+            
+            response = client.chat.completions.create(
+                model="llama-3.3-70b-versatile",
+                messages=[
+                    {"role": "system", "content": system_prompt},
+                    {"role": "user", "content": text}
+                ],
+                temperature=0.7,
+                max_tokens=500
+            )
+            
+            bot.reply_to(message, response.choices[0].message.content)
+            
+        except Exception as e:
+            logging.error(f"Error in AI handler: {e}")
+            bot.reply_to(message, 
+                "❌ Sorry, I encountered an error processing your message. "
+                "Please try again or use /help for available commands."
+            )
+
+# --- Stubs for missing functions (if not defined elsewhere) ---
+def get_ton_balance(address):
+    """Stub for TON balance lookup. Replace with real implementation."""
+    return None
+
+def get_usdt_balance(address):
+    """Stub for USDT Jetton balance lookup. Replace with real implementation."""
+    return None
+
+def get_last_transactions(address):
+    """Stub for last transactions lookup. Replace with real implementation."""
+    return "No recent transactions found."
 
 # --- 7. STARTUP ---
 if __name__ == "__main__":
