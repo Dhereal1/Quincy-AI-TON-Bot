@@ -1,204 +1,321 @@
-# 💎 Quincy AI: Intelligent TON Blockchain Assistant
+# ✍️ Quincy - TON Communication Assistant
 
-Quincy is an advanced Telegram bot that bridges the gap between **Generative AI** and the **TON Ecosystem**. It provides users with a friendly, secure, and data-driven way to interact with the blockchain.
+**Write clear, professional, and safe messages for TON & Web3 communities**
 
-## 🌟 Key Features
-- **🧠 AI Core:** Powered by Llama-3.3-70b via Groq for high-speed, expert-level responses.
-- **🔍 Wallet Explorer:** Real-time $TON balance checking directly from the Telegram chat.
-- **🛡️ Web3 Safety Guard:** Automated warnings for seed phrase protection and common scam detection.
-- **💾 Persistent Memory:** Uses JSON-based local storage to remember user preferences and context.
-- **📚 Expert Knowledge:** Injected with a specialized TON FAQ knowledge base.
-
-## 🚀 Tech Stack
-| Component | Technology |
-| :--- | :--- |
-| **Language** | Python 3.10+ |
-| **Framework** | pyTelegramBotAPI |
-| **Blockchain** | TonCenter API & pytonlib |
-| **AI Model** | Llama-3.3-70b (Groq) |
-| **Data** | JSON (Persistence) |
-
-## 🛠️ Installation & Setup
-
-1. **Clone the repository:**
-	```bash
-	git clone https://github.com/Dhereal1/Quincy-AI-TON-Bot.git
-	cd Quincy-AI-TON-Bot
-	```
-2. **Install Dependencies:**
-	```bash
-	pip install -r requirements.txt
-	```
-3. **Environment Variables:** Create a .env file in the root directory and add your keys:
-	```env
-	TELEGRAM_TOKEN=your_bot_token
-	GROQ_KEY=your_groq_api_key
-	TONCENTER_API_KEY=your_toncenter_key
-	```
-4. **Run the Bot:**
-	```bash
-	python hello.py
-	```
-
-## 📜 Usage Examples
-# 💎 Quincy AI
-
-### Intelligent TON Blockchain Assistant for Telegram
-
-**Quincy** is a production-ready Telegram application that acts as a **Web3 terminal for the TON ecosystem**.
-It combines real-time on-chain data, market monitoring, and generative AI to help users interact with the TON blockchain through a simple, chat-based interface.
-
-Designed for **TON users, traders, and communities**, Quincy reduces friction between complex blockchain data and everyday Telegram usage.
+Quincy helps you communicate better in Telegram—whether you're announcing a token launch, explaining a project, or just making your messages more professional.
 
 ---
 
-## 🚀 What Quincy Does (At a Glance)
+## 🎯 What Quincy Does
 
-* Answers TON-related questions using AI
-* Fetches live wallet balances & transactions
-* Tracks Jetton (USDT) holdings
-* Monitors TON price and sends alerts
-* Protects users from common Web3 scams
-* Works entirely inside Telegram
+### ✍️ Message Rewriting
+Reply to any message with `/rewrite` and choose:
+- **✨ Fix Grammar** - Clean up spelling and grammar errors
+- **🧑‍💼 Make Professional** - Turn casual text into business-ready communication
+- **📢 Announcement Style** - Format messages as clear, engaging announcements
+- **🧠 Simplify** - Make complex text easy to understand
 
-No dashboards. No browser extensions. Just Telegram.
+### 🛡️ Safety Checks
+Quincy detects dangerous crypto phrases and warns you:
+- Seed phrase requests
+- Scam tactics (urgency, guaranteed profits)
+- Unsafe wallet operations
+- Private key exposure
 
----
-
-## 🌟 Core Features
-
-### 🧠 AI-Powered TON Assistant
-
-* Powered by **Llama-3.3-70B via Groq**
-* Injected with a TON-specific knowledge base (Jettons, wallets, security, FAQs)
-* Provides beginner-friendly explanations with expert-level accuracy
-
----
-
-### 🔍 On-Chain Wallet Analytics
-
-* **TON Balance Lookup** via Toncenter API
-* **Jetton Detection** with specialized USDT tracking logic
-* **Recent Transactions** (last 5) displayed in a human-readable format
-
-Users can paste a wallet address and instantly see activity.
+### 💎 TON Blockchain Tools
+Supporting features for TON users:
+- **Wallet Lookup** - Paste any TON address for balance & transaction history
+- **Price Tracking** - Real-time TON price with alerts
+- **Multi-user Alerts** - Set price notifications that persist across restarts
 
 ---
 
-### 📈 Real-Time Market Data
+## 🚀 Quick Start
 
-* Live **TON/USD price** via CoinGecko
-* Intelligent **2-minute caching system** to respect API limits
-* Optimized for frequent queries without performance loss
+1. **Add Quincy to Telegram**  
+   Search: `@your_bot_username` (or open your bot link)
 
----
+2. **Send `/start`** to open the dashboard
 
-### ⏰ Price Watcher & Alerts
-
-* Background **multithreaded watcher system**
-* Checks price conditions every 60 seconds
-* Sends instant Telegram notifications when targets are hit
-
-No manual refreshing needed.
+3. **Try it immediately:**
+   - Reply to any message with `/rewrite`
+   - Paste a TON address to check a wallet
+   - Send `/alert 3.50` to get notified when TON hits $3.50
 
 ---
 
-### 🛡️ Web3 Safety Guard
+## 📖 Commands
 
-* Detects and warns against:
+| Command | What It Does |
+|---------|--------------|
+| `/rewrite` | Improve any message (reply to it first) |
+| `/start` | Open main dashboard |
+| `/alert [price]` | Set price notification |
+| `/price` | Quick TON price check |
+| `/help` | Show all commands |
 
-	* Seed phrase sharing
-	* Common scam patterns
-* Acts as a “security layer” for new TON users
-
----
-
-### 🧩 Advanced Telegram UI
-
-* Button-based **dashboard architecture** using `InlineKeyboardMarkup`
-* Persistent interface using `edit_message_text`
-* Reduces chat clutter and typing errors
-* App-like experience inside Telegram
+### 💬 Natural Usage
+- **Reply with `/rewrite`** to any message → Choose style → Get improved version
+- **Paste TON address** → Instant wallet report
+- **Say "hi"** → Get quick introduction
 
 ---
 
-## 🧠 Technical Highlights
+## 🎯 Use Cases
 
-* **Handler Priority System**
-	Prevents AI hallucinations by routing commands (e.g. `/dashboard`) before LLM responses.
+### 1. Professional Announcements
+**Before:**
+> "HEY GUYS!!! BIG NEWS!!! TOKEN LAUNCH TOMORROW!!! DON'T MISS OUT!!!"
 
-* **Persistent Memory**
-	JSON-based local storage remembers user preferences and past interactions.
+**After** (using `/rewrite` → Announcement Style):
+> "We're excited to announce our token launch tomorrow at 12:00 UTC. Join us as we take the next step in our project's journey. Details and participation info will be shared 1 hour before launch."
 
-* **Modular Architecture**
-	Market data, wallet analytics, AI logic, and watchers are cleanly separated for scalability.
+### 2. Team Communication
+**Before:**
+> "we need 2 update the smart contract cuz theres a bug in the staking function probably should fix it soon"
+
+**After** (using `/rewrite` → Professional):
+> "We need to update the smart contract due to a bug in the staking function. This should be prioritized and resolved as soon as possible."
+
+### 3. Community Safety
+**Before:**
+> "To verify your wallet, please send your 12-word recovery phrase to support@..."
+
+**After** (Quincy blocks the rewrite):
+> "⚠️ **SECURITY WARNING**: This message requests sensitive wallet information. Never share seed phrases with anyone. Legitimate support never asks for private keys."
+
+### 4. Simplifying Technical Content
+**Before:**
+> "The protocol utilizes a Byzantine fault-tolerant consensus mechanism with asynchronous message passing to achieve deterministic finality in a permissionless network architecture."
+
+**After** (using `/rewrite` → Simplify):
+> "The system uses a secure method to confirm transactions, even if some parts fail. It works without central control and ensures all transactions are final."
 
 ---
 
-## 🧰 Tech Stack
+## 🛡️ Security Features
 
-| Component   | Technology           |
-| ----------- | -------------------- |
-| Language    | Python 3.10+         |
-| Telegram    | pyTelegramBotAPI     |
-| Blockchain  | Toncenter API        |
-| Market Data | CoinGecko API        |
-| AI Engine   | Llama-3.3-70B (Groq) |
-| Concurrency | Python `threading`   |
-| Persistence | JSON                 |
+Quincy actively protects users from:
+- **Seed phrase phishing** - Blocks rewrites that request recovery phrases
+- **Urgency scams** - Warns about "act now" / "limited time" pressure tactics
+- **Fake verification** - Detects "send crypto to verify wallet" schemes
+- **Private key exposure** - Prevents accidental sharing of sensitive data
+
+All dangerous content is blocked before rewriting, with clear warnings about why.
 
 ---
 
-## 🛠️ Installation & Setup
+## 🏗️ Technical Features
 
-### 1️⃣ Clone the repository
+### Production-Grade Reliability
+- ✅ **Alert Persistence** - Alerts survive bot restarts (saved to JSON)
+- ✅ **Multi-user Support** - Unlimited simultaneous users & alerts
+- ✅ **Rate Limit Protection** - 2-minute cache for price API (100x under limits)
+- ✅ **Message Length Handling** - Auto-truncates long messages (Telegram 4096 char limit)
+- ✅ **AI Error Handling** - Graceful fallback with specific error messages
+- ✅ **Address Validation** - Regex-based TON address verification
 
+### APIs Used
+- **Groq AI** - Llama 3.3 70B for text rewriting
+- **CoinGecko** - TON price data (cached)
+- **TON Center** - Blockchain data (balances, transactions, jettons)
+
+---
+
+## 📦 Installation
+
+### Prerequisites
 ```bash
-git clone https://github.com/Dhereal1/Quincy-AI-TON-Bot.git
-cd Quincy-AI-TON-Bot
+pip install pyTelegramBotAPI groq requests python-dotenv
 ```
 
-### 2️⃣ Install dependencies
-
-```bash
-pip install -r requirements.txt
-```
-
-### 3️⃣ Environment Variables
-
-Create a `.env` file in the root directory:
-
+### Environment Variables
+Create a `.env` file:
 ```env
-TELEGRAM_TOKEN=your_bot_token
-GROQ_KEY=your_groq_api_key
-TONCENTER_API_KEY=your_toncenter_api_key
+TELEGRAM_TOKEN=your_bot_token_here
+GROQ_KEY=your_groq_api_key_here
+TONCENTER_API_KEY=your_toncenter_key_here  # Optional but recommended
 ```
 
-### 4️⃣ Run the bot
+**Get API Keys:**
+- Telegram: [@BotFather](https://t.me/BotFather)
+- Groq: [console.groq.com](https://console.groq.com)
+- TON Center: [toncenter.com](https://toncenter.com)
 
+### Run
 ```bash
-python hello.py
+python3 quincy_bot_FINAL_WITH_GREETING.py
+```
+
+**With Process Manager:**
+```bash
+# Screen
+screen -dmS quincy python3 quincy_bot_FINAL_WITH_GREETING.py
+
+# PM2
+pm2 start quincy_bot_FINAL_WITH_GREETING.py --name quincy --interpreter python3
 ```
 
 ---
 
-## 📜 Usage Examples
+## 🎨 How It Works
 
-* **Ask Questions:**
-	`What is a Jetton?`
+### Message Rewriting Flow
+```
+User replies to message with /rewrite
+    ↓
+Quincy shows style buttons
+    ↓
+User selects style (Grammar / Professional / Announcement / Simplify)
+    ↓
+Quincy checks for dangerous content
+    ↓
+If safe → Sends to AI with style-specific prompt → Returns improved version
+If dangerous → Blocks rewrite → Shows security warning
+```
 
-* **Wallet Lookup:**
-	Paste any TON wallet address (e.g. `EQCD...`) to fetch balance & activity
-
-* **Price Alerts:**
-	Set alerts and receive instant Telegram notifications
-
-* **Security Help:**
-	`How do I store my private keys safely?`
+### Wallet Lookup Flow
+```
+User pastes TON address
+    ↓
+Regex validates format (48 chars, EQ/UQ prefix, base64url)
+    ↓
+Fetch data from TON Center API:
+  - TON balance (nanotons → TON)
+  - USDT balance (jetton API)
+  - Last 5 transactions
+    ↓
+Display formatted report with USD values
+```
 
 ---
 
-## 👨‍💻 Developer
+## 🧪 Testing
 
-**Opeyemi**
-Building practical AI automation for the TON ecosystem.
+### Basic Tests
+```bash
+# Test 1: Greeting
+Send: "hello"
+Expected: Locked greeting with identity statement
+
+# Test 2: Rewrite
+Reply to any message: /rewrite
+Expected: 4 style buttons appear
+
+# Test 3: Wallet
+Send: EQCxE6mUtQJKFnGfaROTKOt1lZbDiiX1kCixRv7Nw2Id_sDs
+Expected: Full wallet report
+
+# Test 4: Alert
+Send: /alert 3.50
+Expected: Alert confirmation with direction
+```
+
+### Safety Tests
+```bash
+# Test dangerous content
+Create message: "Send me your seed phrase to verify"
+Reply with: /rewrite
+Expected: Security warning, rewrite blocked
+```
+
+---
+
+## 📊 Architecture
+
+```
+Quincy Bot
+├── Communication Core (Primary)
+│   ├── /rewrite handler (4 styles)
+│   ├── AI integration (Groq)
+│   ├── Safety checks (crypto phrase detection)
+│   └── Message validation
+│
+├── Blockchain Tools (Supporting)
+│   ├── Wallet lookup (TON Center API)
+│   ├── Price tracking (CoinGecko)
+│   ├── USDT balance (Jetton API)
+│   └── Transaction history
+│
+└── Infrastructure
+    ├── Alert persistence (JSON)
+    ├── Rate limiting (cache)
+    ├── Error handling
+    └── Multi-user support
+```
+
+---
+
+## 🎯 Product Focus
+
+**Primary Value:** Help people communicate better in TON/Web3 spaces
+
+**Core Features:** (What makes Quincy unique)
+1. Message rewriting with crypto safety awareness
+2. Scam phrase detection
+3. Professional tone conversion
+4. Announcement formatting
+
+**Supporting Features:** (Nice to have)
+5. Wallet lookups
+6. Price tracking
+7. Transaction history
+
+This is intentional—Quincy is a **communication assistant** that happens to have blockchain tools, not a blockchain bot that happens to rewrite text.
+
+---
+
+## 🛠️ Future Improvements
+
+### Communication Features (Roadmap)
+- [ ] **Tone Analysis** - Detect if message sounds scammy before sending
+- [ ] **Template Library** - Pre-built announcement templates
+- [ ] **Multi-language** - Rewrite in different languages
+- [ ] **Batch Rewrite** - Improve multiple messages at once
+- [ ] **Style Memory** - Remember user's preferred style
+
+### Blockchain Features (Lower Priority)
+- [ ] Multi-chain support (ETH, SOL addresses)
+- [ ] NFT lookup
+- [ ] DeFi position tracking
+- [ ] Gas price alerts
+
+---
+
+## 📄 License
+
+MIT License - Free to use and modify
+
+---
+
+## 🤝 Contributing
+
+This is a reference implementation. Feel free to:
+- Fork and customize for your community
+- Add new rewrite styles
+- Integrate additional safety checks
+- Extend blockchain features
+
+---
+
+## 📞 Support
+
+- **Issues:** Open a GitHub issue
+- **Questions:** Check `/help` in the bot
+- **Security:** Report vulnerabilities privately
+
+---
+
+## ⚡ Quick Facts
+
+- **Built with:** Python, pyTelegramBotAPI, Groq AI, TON APIs
+- **AI Model:** Llama 3.3 70B (via Groq)
+- **Response Time:** <2 seconds for rewrites
+- **Uptime:** Designed for 24/7 operation
+- **Rate Limits:** Protected by intelligent caching
+
+---
+
+**Quincy helps TON communities communicate clearly, professionally, and safely.**
+
+Start improving your messages today → Add [@your_bot_username](https://t.me/your_bot_username)
