@@ -2,3 +2,5 @@
 __pycache__/
 chat_history.json
 .venv/
+quincy_alerts.json
+*.db
