@@ -27,6 +27,10 @@ def register_routes(app: Flask) -> None:
             }
         )
 
+    @app.get("/favicon.ico")
+    def favicon():
+        return "", 204
+
     @app.get("/api/health")
     def health():
         return jsonify({"status": "ok"})
