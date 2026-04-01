@@ -2,6 +2,7 @@ import logging
 import time
 
 import requests
+from tonsdk.utils import Address
 
 logger = logging.getLogger(__name__)
 
@@ -42,9 +43,10 @@ class TonService:
 
     def get_ton_balance(self, address: str) -> float | None:
         try:
+            normalized_address = self._normalize_address(address)
             response = self._session.get(
                 "https://toncenter.com/api/v2/getAddressBalance",
-                params={"address": address},
+                params={"address": normalized_address},
                 headers=self._toncenter_headers(),
                 timeout=10,
             )
@@ -59,10 +61,11 @@ class TonService:
 
     def get_usdt_balance(self, address: str, usdt_master_address: str) -> float:
         try:
+            normalized_address = self._normalize_address(address)
             response = self._session.get(
                 "https://toncenter.com/api/v3/jetton/wallets",
                 params={
-                    "owner_address": address,
+                    "owner_address": normalized_address,
                     "jetton_address": usdt_master_address,
                     "limit": 1,
                 },
@@ -81,9 +84,10 @@ class TonService:
 
     def get_last_transactions(self, address: str, limit: int = 5) -> list[str]:
         try:
+            normalized_address = self._normalize_address(address)
             response = self._session.get(
                 "https://toncenter.com/api/v2/getTransactions",
-                params={"address": address, "limit": limit},
+                params={"address": normalized_address, "limit": limit},
                 headers=self._toncenter_headers(),
                 timeout=10,
             )
@@ -98,7 +102,7 @@ class TonService:
                 in_msg = tx.get("in_msg", {})
                 value = int(in_msg.get("value", "0")) / 1_000_000_000
                 destination = in_msg.get("destination", "")
-                direction = "IN" if destination == address else "OUT"
+                direction = "IN" if destination == normalized_address else "OUT"
                 timestamp = tx.get("utime", 0)
                 time_str = time.strftime("%Y-%m-%d %H:%M", time.localtime(timestamp)) if timestamp else "Unknown"
                 if value > 0:
@@ -114,3 +118,10 @@ class TonService:
         if not self._toncenter_api_key:
             return {}
         return {"X-API-Key": self._toncenter_api_key}
+
+    @staticmethod
+    def _normalize_address(address: str) -> str:
+        try:
+            return Address(address).to_string(False)
+        except Exception as exc:
+            raise ValueError(f"Invalid TON address: {address}") from exc

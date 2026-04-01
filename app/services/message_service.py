@@ -333,6 +333,12 @@ class QuincyService:
             ton_balance = self._ton_service.get_ton_balance(address)
             usdt_balance = self._ton_service.get_usdt_balance(address, USDT_MASTER_ADDRESS)
             transactions = self._ton_service.get_last_transactions(address)
+        except ValueError:
+            return OutboundMessage(
+                chat_id=chat_id,
+                text="Invalid TON address. Please paste a valid user-friendly TON wallet address.",
+                reply_to_message_id=message_id,
+            )
         except Exception:
             logger.exception("Wallet lookup failed")
             return OutboundMessage(
